@@ -175,7 +175,8 @@ void VscProcess::readFromVehicle()
 
 	/* Read all messages */
 	while (vsc_read_next_msg(vscInterface, &recvMsg) > 0) {
-		/* Read next Vsc Message */
+		ROS_INFO("Got message");
+	  /* Read next Vsc Message */
 		switch (recvMsg.msg.msgType) {
 		case MSG_VSC_HEARTBEAT:
 			if(handleHeartbeatMsg(recvMsg) == 0) {

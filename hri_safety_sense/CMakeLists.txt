@@ -1,36 +1,41 @@
 cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+project(hri_safety_sense)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED COMPONENTS
+message_generation
+roscpp
+)
 
-rosbuild_init()
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+## Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  EmergencyStop.srv
+  KeyString.srv
+  KeyValue.srv
+)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-rosbuild_gensrv()
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(terex ${PROJECT_NAME})
-#rosbuild_add_executable(talker src/talker.cpp)
-#rosbuild_add_executable(listener src/listener.cpp)
-#target_link_libraries(terex hri_common)
+catkin_package()
 
-rosbuild_add_executable(safe_remote_control src/main.cpp src/VscProcess.cpp src/VehicleInterface.c src/JoystickHandler.cpp src/SerialInterface.c)
- 
+include_directories(include)
+include_directories(src)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
+
+add_executable(safe_remote_control 
+src/main.cpp 
+src/VscProcess.cpp 
+src/VehicleInterface.c 
+src/JoystickHandler.cpp 
+src/SerialInterface.c)
+
+add_dependencies(safe_remote_control hri_safety_sense_generate_messages_cpp)
+
+target_link_libraries(safe_remote_control ${catkin_LIBRARIES})

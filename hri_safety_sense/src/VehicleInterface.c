@@ -29,6 +29,7 @@
 #include "VehicleInterface.h"
 #include "SerialInterface.h"
 
+
 /**
  * Calculate the Fletcher 16 Checksum
  *
@@ -156,12 +157,13 @@ int vsc_read_next_msg(VscInterfaceType* vscInterface, VscMsgType *newMsg) {
 
 	/* Received Data */
 	if (bytesRead >= 0) {
+	  printf("bytesRead: %d\n",bytesRead);
 		vscInterface->front += bytesRead;
 	} else {
 		fprintf(stderr, "VscInterface: Receive Error. (%i) (%i)\n", retval,
 				errno);
 	}
-
+  printf("read msg\n");
 	/* Check for messages in queue when all of the following are true:
 	 *  - Queue is not empty
 	 *  - Queue size is at least as big as smallest message
@@ -177,6 +179,7 @@ int vsc_read_next_msg(VscInterfaceType* vscInterface, VscMsgType *newMsg) {
 	while (vscInterface->front != vscInterface->back
 			&& (vscInterface->front - vscInterface->back
 					>= VSC_MIN_MESSAGE_LENGTH) && !done) {
+
 		msgPtr = (VscMsgType *) (vscInterface->recvbuffer + vscInterface->back);
 		if (msgPtr->msg.header_1 == VSC_MESSAGE_HEADER_1
 				&& msgPtr->msg.header_2 == VSC_MESSAGE_HEADER_2) {

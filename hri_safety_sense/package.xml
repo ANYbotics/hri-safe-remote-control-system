@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hri_safety_sense</name>
+  <version>0.0.0</version>
+  <description>The hri_safety_sense package</description>
+  <maintainer email="gehrinch@ethz.ch">Christian Gehring</maintainer>
+  <license>BSD</license>
+  <author email="gehrinch@ethz.ch">Christian Gehring</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>message_generation</depend>
+  <depend>roscpp</depend>
+</package>
