@@ -18,7 +18,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 
-#include "VehicleMessages.h"
+#include "hri_safety_sense/VehicleMessages.h"
 #include "JoystickHandler.h"
 
 using namespace hri_safety_sense;

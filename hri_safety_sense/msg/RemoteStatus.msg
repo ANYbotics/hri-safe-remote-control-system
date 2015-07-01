@@ -1,0 +1,4 @@
+uint8 BatteryLevel
+uint8 BatteryCharging
+uint8 ConnStrengthVSC
+uint8 ConnStrengthSRC

@@ -33,8 +33,8 @@
  */
 #include "VscProcess.h"
 #include "JoystickHandler.h"
-#include "VehicleInterface.h"
-#include "VehicleMessages.h"
+#include "hri_safety_sense/VehicleInterface.h"
+#include "hri_safety_sense/VehicleMessages.h"
 
 using namespace hri_safety_sense;
 
@@ -76,15 +76,17 @@ VscProcess::VscProcess() :
 	joystickHandler = new JoystickHandler();
 
 	// EStop callback
-	estopServ = rosNode.advertiseService("safety/service/send_emergency_stop", &VscProcess::EmergencyStop, this);
+	estopServ = rosNode.advertiseService("safety/send_emergency_stop", &VscProcess::EmergencyStop, this);
 
 	// KeyValue callbacks
-	keyValueServ = rosNode.advertiseService("safety/service/key_value", &VscProcess::KeyValue, this);
-	keyStringServ = rosNode.advertiseService("safety/service/key_string", &VscProcess::KeyString, this);
+	keyValueServ = rosNode.advertiseService("safety/key_value", &VscProcess::KeyValue, this);
+	keyStringServ = rosNode.advertiseService("safety/key_string", &VscProcess::KeyString, this);
+	keyRequestServ = rosNode.advertiseService("safety/request_key", &VscProcess::GetKeyValue, this);
 
 	// Publish Emergency Stop Status
 	estopPub = rosNode.advertise<std_msgs::UInt32>("safety/emergency_stop", 10);
-
+	keyValuesPub = rosNode.advertise<hri_safety_sense::KeyValueResp>("safety/key_values",10);
+	remoteStatusPub = rosNode.advertise<hri_safety_sense::RemoteStatus>("safety/remote_status",10);
 	// Main Loop Timer Callback
 	mainLoopTimer = rosNode.createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
 
@@ -114,7 +116,7 @@ bool VscProcess::EmergencyStop(EmergencyStop::Request  &req, EmergencyStop::Resp
 
 bool VscProcess::KeyValue(KeyValue::Request  &req, KeyValue::Response &res )
 {
-	// Send heartbeat message to vehicle in every state
+	// set req.key to req.value
 	vsc_send_user_feedback(vscInterface, req.Key, req.Value);
 
 	ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
@@ -124,7 +126,7 @@ bool VscProcess::KeyValue(KeyValue::Request  &req, KeyValue::Response &res )
 
 bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
 {
-	// Send heartbeat message to vehicle in every state
+	// set req.key to req.value (string)
 	vsc_send_user_feedback_string(vscInterface, req.Key, req.Value.c_str());
 
 	ROS_INFO("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
@@ -132,6 +134,12 @@ bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
 	return true;
 }
 
+bool VscProcess::GetKeyValue(KeyString::Request &req, KeyString::Response &res)
+{
+  // update the value of req.key
+  vsc_send_request_user_feedback(vscInterface,req.Key);
+  return true;
+}
 
 void VscProcess::processOneLoop(const ros::TimerEvent&)
 {
@@ -168,14 +176,59 @@ int VscProcess::handleHeartbeatMsg(VscMsgType& recvMsg)
 
 	return retVal;
 }
+int VscProcess::handleFeedbackMsg(VscMsgType& recvMsg)
+{
+  int retVal = 0;
+  if(recvMsg.msg.length == sizeof(UserFeedbackMsgType)) {
+    ROS_DEBUG("Received Feedback_MSG from VSC");
 
+    UserFeedbackMsgType *msgPtr = (UserFeedbackMsgType*)recvMsg.msg.data;
+
+    // publish values
+    hri_safety_sense::KeyValueResp msg;
+    msg.Key = msgPtr->key;
+    msg.Value = msgPtr->value;
+    keyValuesPub.publish(msg);
+
+  } else {
+    ROS_WARN("RECEIVED FEEDBACKSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+        (unsigned int)sizeof(UserFeedbackMsgType), recvMsg.msg.length);
+    retVal = 1;
+  }
+
+  return retVal;
+}
+int VscProcess::handleRemoteUpdate(VscMsgType& recvMsg)
+{
+  int retVal = 0;
+  if(recvMsg.msg.length == sizeof(RemoteStatusType)) {
+    ROS_DEBUG("Received Feedback_MSG from VSC");
+
+    RemoteStatusType *msgPtr = (RemoteStatusType*)recvMsg.msg.data;
+
+    // publish values
+    hri_safety_sense::RemoteStatus msg;
+    msg.BatteryLevel = msgPtr->battery_level;
+    msg.BatteryCharging = msgPtr->battery_charging;
+    msg.ConnStrengthVSC = msgPtr->conn_strength_VSC;
+    msg.ConnStrengthSRC = msgPtr->conn_strength_SRC;
+    remoteStatusPub.publish(msg);
+
+  } else {
+    ROS_WARN("RECEIVED FEEDBACKSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+        (unsigned int)sizeof(RemoteStatusType), recvMsg.msg.length);
+    retVal = 1;
+  }
+
+  return retVal;
+}
 void VscProcess::readFromVehicle()
 {
 	VscMsgType recvMsg;
 
 	/* Read all messages */
 	while (vsc_read_next_msg(vscInterface, &recvMsg) > 0) {
-		ROS_INFO("Got message");
+		//ROS_INFO("Got message");
 	  /* Read next Vsc Message */
 		switch (recvMsg.msg.msgType) {
 		case MSG_VSC_HEARTBEAT:
@@ -196,9 +249,16 @@ void VscProcess::readFromVehicle()
 
 			break;
 		case MSG_USER_FEEDBACK:
-//			handleFeedbackMsg(&recvMsg);
+			// we get this message if we've requested a value
+		  if (handleFeedbackMsg(recvMsg) == 0) {
+		    lastDataRx = ros::Time::now();
+		  }
 
 			break;
+
+		case MSG_REMOTE_STATUS:
+		  handleRemoteUpdate(recvMsg);
+		  break;
 		default:
 			errorCounts.invalidRxMsgCount++;
 			ROS_ERROR("Receive Error.  Invalid MsgType (0x%02X)",recvMsg.msg.msgType);

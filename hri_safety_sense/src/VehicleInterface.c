@@ -25,9 +25,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-#include "VehicleMessages.h"
-#include "VehicleInterface.h"
-#include "SerialInterface.h"
+#include "hri_safety_sense/VehicleMessages.h"
+#include "hri_safety_sense/VehicleInterface.h"
+#include "hri_safety_sense/SerialInterface.h"
 
 
 /**
@@ -157,13 +157,13 @@ int vsc_read_next_msg(VscInterfaceType* vscInterface, VscMsgType *newMsg) {
 
 	/* Received Data */
 	if (bytesRead >= 0) {
-	  printf("bytesRead: %d\n",bytesRead);
+	  //printf("bytesRead: %d\n",bytesRead);
 		vscInterface->front += bytesRead;
 	} else {
 		fprintf(stderr, "VscInterface: Receive Error. (%i) (%i)\n", retval,
 				errno);
 	}
-  printf("read msg\n");
+  //printf("read msg\n");
 	/* Check for messages in queue when all of the following are true:
 	 *  - Queue is not empty
 	 *  - Queue size is at least as big as smallest message
@@ -284,6 +284,63 @@ int32_t vsc_get_button_value(uint8_t button) {
 	}
 
 	return 0;
+}
+
+/**
+ * Send user feedback get message to VSC
+ *
+ * This packages and sends the feedback get message to the VSC,
+ * the VSC will respond with a user feedback MSG containg the requested value
+ *
+ * @param vscInterface VSC Interface Structure.
+ * @param key Index for the requested user feedback value.
+ */
+
+void vsc_send_request_user_feedback(VscInterfaceType* vscInterface, uint8_t key) {
+  VscMsgType requestMsg;
+  UserFeedbackGetMsgType *msgPtr = (UserFeedbackGetMsgType*) requestMsg.msg.data;
+
+  /* Fill Message */
+  requestMsg.msg.msgType = MSG_USER_FEEDBACK_GET;
+  requestMsg.msg.length = sizeof(UserFeedbackGetMsgType);
+
+  /* Set this value > 0 to indicate an E-STOP condition from SW */
+  msgPtr->key = key;
+
+  /* Send Message */
+  if (vsc_send_msg(vscInterface, &requestMsg) < 0) {
+    fprintf(stderr, "Send Message Failure (Errno: %i)\n", errno);
+  }
+}
+
+/**
+ * Send message configuration message to VSC
+ *
+ * This packages and sends the message configuration message to the vsc
+ *
+ * @param vscInterface VSC Interface Structure.
+ * @param msg_type defines what message type is being enabled/disabled
+ * @param enable that msg of msg_type is sent if > 0
+ * @param interval time between transmissions in milliseconds range[20..uint16_MAX]
+ */
+
+void vsc_send_configure_msgs(VscInterfaceType* vscInterface, uint8_t msg_type, uint8_t enable,uint16_t interval ) {
+  VscMsgType requestMsg;
+  UserConfigureMessagesType *msgPtr = (UserConfigureMessagesType*) requestMsg.msg.data;
+
+  /* Fill Message */
+  requestMsg.msg.msgType = MSG_CONTROL_MESSAGE;
+  requestMsg.msg.length = sizeof(UserConfigureMessagesType);
+
+  /* Set this value > 0 to indicate an E-STOP condition from SW */
+  msgPtr->msg_type = msg_type;
+  msgPtr->enable = enable;
+  msgPtr->interval = interval;
+
+  /* Send Message */
+  if (vsc_send_msg(vscInterface, &requestMsg) < 0) {
+    fprintf(stderr, "Send Message Failure (Errno: %i)\n", errno);
+  }
 }
 
 /**

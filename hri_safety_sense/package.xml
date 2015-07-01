@@ -10,4 +10,5 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>message_generation</depend>
   <depend>roscpp</depend>
+  <depend>std_msgs</depend>
 </package>

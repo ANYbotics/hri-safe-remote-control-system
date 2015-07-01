@@ -4,8 +4,15 @@ project(hri_safety_sense)
 find_package(catkin REQUIRED COMPONENTS
 message_generation
 roscpp
+std_msgs
 )
 
+## Genereate messages in the 'msg' folder
+add_message_files(
+  FILES
+  KeyValueResp.msg
+  RemoteStatus.msg
+)
 
 ## Generate services in the 'srv' folder
 add_service_files(
@@ -18,15 +25,20 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
+   std_msgs
 )
 
-catkin_package()
-
-include_directories(include)
-include_directories(src)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
+catkin_package(
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS
+    message_generation
+    roscpp
+    std_msgs
 )
+
+include_directories(include
+                    src
+                    ${catkin_INCLUDE_DIRS})
 
 
 add_executable(safe_remote_control 

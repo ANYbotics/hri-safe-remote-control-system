@@ -27,8 +27,10 @@
  * HRI_COMMON Includes
  */
 #include "MsgHandler.h"
-#include "VehicleMessages.h"
-#include "VehicleInterface.h"
+#include "hri_safety_sense/VehicleMessages.h"
+#include "hri_safety_sense/VehicleInterface.h"
+#include "hri_safety_sense/KeyValueResp.h"
+#include "hri_safety_sense/RemoteStatus.h"
 
 namespace hri_safety_sense {
 
@@ -56,11 +58,14 @@ namespace hri_safety_sense {
 		  bool EmergencyStop(EmergencyStop::Request &req, EmergencyStop::Response &res);
 		  bool KeyValue(KeyValue::Request &req, KeyValue::Response &res);
 		  bool KeyString(KeyString::Request &req, KeyString::Response &res);
+		  bool GetKeyValue(KeyString::Request &req, KeyString::Response &res);
 
 	   private:
 
 		  void readFromVehicle();
 		  int handleHeartbeatMsg(VscMsgType& recvMsg);
+		  int handleFeedbackMsg(VscMsgType& recvMsg);
+		  int handleRemoteUpdate(VscMsgType& recvMsg);
 
 		  // Local State
 		  uint32_t 				myEStopState;
@@ -69,8 +74,10 @@ namespace hri_safety_sense {
 		  // ROS
 		  ros::NodeHandle 		rosNode;
 		  ros::Timer 	  		mainLoopTimer;
-		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ;
+		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ, keyRequestServ;
 		  ros::Publisher		estopPub;
+		  ros::Publisher    keyValuesPub;
+		  ros::Publisher    remoteStatusPub;
 		  ros::Time 			lastDataRx, lastTxTime;
 
 		  // Message Handlers
