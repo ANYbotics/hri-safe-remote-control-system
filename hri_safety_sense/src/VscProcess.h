@@ -29,6 +29,7 @@
 #include "MsgHandler.h"
 #include "hri_safety_sense/VehicleMessages.h"
 #include "hri_safety_sense/VehicleInterface.h"
+#include "hri_safety_sense/MessageConfigure.h"
 #include "hri_safety_sense/KeyValueResp.h"
 #include "hri_safety_sense/RemoteStatus.h"
 
@@ -58,8 +59,8 @@ namespace hri_safety_sense {
 		  bool EmergencyStop(EmergencyStop::Request &req, EmergencyStop::Response &res);
 		  bool KeyValue(KeyValue::Request &req, KeyValue::Response &res);
 		  bool KeyString(KeyString::Request &req, KeyString::Response &res);
-		  bool GetKeyValue(KeyString::Request &req, KeyString::Response &res);
-
+		  bool GetKeyValue(KeyValue::Request &req, KeyValue::Response &res);
+		  bool ConfigureMessages(MessageConfigure::Request &req,MessageConfigure::Response & res);
 	   private:
 
 		  void readFromVehicle();
@@ -74,7 +75,7 @@ namespace hri_safety_sense {
 		  // ROS
 		  ros::NodeHandle 		rosNode;
 		  ros::Timer 	  		mainLoopTimer;
-		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ, keyRequestServ;
+		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ, keyRequestServ, configureMessageServ;
 		  ros::Publisher		estopPub;
 		  ros::Publisher    keyValuesPub;
 		  ros::Publisher    remoteStatusPub;

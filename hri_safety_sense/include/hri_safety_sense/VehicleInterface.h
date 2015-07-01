@@ -164,7 +164,7 @@ void vsc_send_request_user_feedback(VscInterfaceType* vscInterface, uint8_t key)
  * @param enable that msg of msg_type is sent if > 0
  * @param interval time between transmissions in milliseconds range[20..uint16_MAX]
  */
-void vsc_send_configure_msgs(VscInterfaceType* vscInterface, uint8_t msg_type, uint8_t enable,uint16_t interval );
+void vsc_send_configure_msgs(VscInterfaceType* vscInterface, uint8_t msg_type, uint8_t enable,uint16_t interval);
 
 #ifdef __cplusplus
 }

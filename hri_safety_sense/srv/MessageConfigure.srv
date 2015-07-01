@@ -1,0 +1,4 @@
+uint8 MsgType
+uint8 Enable
+uint16 Interval
+---

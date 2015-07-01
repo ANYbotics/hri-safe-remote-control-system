@@ -4,6 +4,7 @@ project(hri_safety_sense)
 find_package(catkin REQUIRED COMPONENTS
 message_generation
 roscpp
+rospy
 std_msgs
 )
 
@@ -20,6 +21,7 @@ add_service_files(
   EmergencyStop.srv
   KeyString.srv
   KeyValue.srv
+  MessageConfigure.srv
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -33,6 +35,7 @@ catkin_package(
   CATKIN_DEPENDS
     message_generation
     roscpp
+    rospy
     std_msgs
 )
 

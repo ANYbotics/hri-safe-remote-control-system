@@ -82,7 +82,7 @@ VscProcess::VscProcess() :
 	keyValueServ = rosNode.advertiseService("safety/key_value", &VscProcess::KeyValue, this);
 	keyStringServ = rosNode.advertiseService("safety/key_string", &VscProcess::KeyString, this);
 	keyRequestServ = rosNode.advertiseService("safety/request_key", &VscProcess::GetKeyValue, this);
-
+	configureMessageServ = rosNode.advertiseService("safety/config_message", &VscProcess::ConfigureMessages, this);
 	// Publish Emergency Stop Status
 	estopPub = rosNode.advertise<std_msgs::UInt32>("safety/emergency_stop", 10);
 	keyValuesPub = rosNode.advertise<hri_safety_sense::KeyValueResp>("safety/key_values",10);
@@ -134,13 +134,17 @@ bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
 	return true;
 }
 
-bool VscProcess::GetKeyValue(KeyString::Request &req, KeyString::Response &res)
+bool VscProcess::GetKeyValue(KeyValue::Request &req, KeyValue::Response &res)
 {
   // update the value of req.key
   vsc_send_request_user_feedback(vscInterface,req.Key);
   return true;
 }
 
+bool VscProcess::ConfigureMessages(MessageConfigure::Request &req,MessageConfigure::Response & res) {
+  vsc_send_configure_msgs(vscInterface,req.MsgType,req.Enable,req.Interval);
+  return true;
+}
 void VscProcess::processOneLoop(const ros::TimerEvent&)
 {
 	// Send heartbeat message to vehicle in every state
