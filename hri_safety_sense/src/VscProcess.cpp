@@ -18,7 +18,6 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "std_msgs/UInt32.h"
-
 /**
  * System Includes
  */
@@ -39,16 +38,17 @@
 using namespace hri_safety_sense;
 
 VscProcess::VscProcess() :
+  rosNode("~"),
 	myEStopState(0)
 {
-	ros::NodeHandle nh("~");
+	//ros::NodeHandle nh("~");
 	std::string serialPort = "/dev/ttyACM0";
-	if(nh.getParam("serial", serialPort)) {
+	if(rosNode.getParam("serial", serialPort)) {
 		ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
 	}
 
 	int  serialSpeed = 115200;
-	if(nh.getParam("serial_speed", serialSpeed)) {
+	if(rosNode.getParam("serial_speed", serialSpeed)) {
 		ROS_INFO("Serial Port Speed updated to:  %i",serialSpeed);
 	}
 
@@ -56,13 +56,15 @@ VscProcess::VscProcess() :
 	vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
 	if (vscInterface == NULL) {
 		ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
+		ROS_WARN("Ending Program now!!");
+		exit(1);
 	} else {
 		ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
 	}
 
 	// Attempt to Set priority
 	bool  set_priority = false;
-	if(nh.getParam("set_priority", set_priority)) {
+	if(rosNode.getParam("set_priority", set_priority)) {
 		ROS_INFO("Set priority updated to:  %i",set_priority);
 	}
 
@@ -76,17 +78,17 @@ VscProcess::VscProcess() :
 	joystickHandler = new JoystickHandler();
 
 	// EStop callback
-	estopServ = rosNode.advertiseService("safety/send_emergency_stop", &VscProcess::EmergencyStop, this);
+	estopServ = rosNode.advertiseService("send_emergency_stop", &VscProcess::EmergencyStop, this);
 
 	// KeyValue callbacks
-	keyValueServ = rosNode.advertiseService("safety/key_value", &VscProcess::KeyValue, this);
-	keyStringServ = rosNode.advertiseService("safety/key_string", &VscProcess::KeyString, this);
-	keyRequestServ = rosNode.advertiseService("safety/request_key", &VscProcess::GetKeyValue, this);
-	configureMessageServ = rosNode.advertiseService("safety/config_message", &VscProcess::ConfigureMessages, this);
+	keyValueServ = rosNode.advertiseService("key_value", &VscProcess::KeyValue, this);
+	keyStringServ = rosNode.advertiseService("key_string", &VscProcess::KeyString, this);
+	keyRequestServ = rosNode.advertiseService("request_key", &VscProcess::GetKeyValue, this);
+	configureMessageServ = rosNode.advertiseService("config_message", &VscProcess::ConfigureMessages, this);
 	// Publish Emergency Stop Status
-	estopPub = rosNode.advertise<std_msgs::UInt32>("safety/emergency_stop", 10);
-	keyValuesPub = rosNode.advertise<hri_safety_sense::KeyValueResp>("safety/key_values",10);
-	remoteStatusPub = rosNode.advertise<hri_safety_sense::RemoteStatus>("safety/remote_status",10);
+	estopPub = rosNode.advertise<std_msgs::UInt32>("emergency_stop", 10);
+	keyValuesPub = rosNode.advertise<hri_safety_sense::KeyValueResp>("key_value_feedback",10);
+	remoteStatusPub = rosNode.advertise<hri_safety_sense::RemoteStatus>("remote_status",10);
 	// Main Loop Timer Callback
 	mainLoopTimer = rosNode.createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
 
@@ -254,10 +256,7 @@ void VscProcess::readFromVehicle()
 			break;
 		case MSG_USER_FEEDBACK:
 			// we get this message if we've requested a value
-		  if (handleFeedbackMsg(recvMsg) == 0) {
-		    lastDataRx = ros::Time::now();
-		  }
-
+		  handleFeedbackMsg(recvMsg);
 			break;
 
 		case MSG_REMOTE_STATUS:
@@ -274,6 +273,8 @@ void VscProcess::readFromVehicle()
 	ros::Duration noDataDuration = ros::Time::now() - lastDataRx;
 	if(noDataDuration > ros::Duration(.25)) {
 		ROS_WARN_THROTTLE(.5, "No Data Received in %i.%09i seconds", noDataDuration.sec, noDataDuration.nsec );
+	} else if (noDataDuration > ros::Duration(0.5)) {
+	  // no Data since half a second --> Soft emergency Stop
 	}
 
 }

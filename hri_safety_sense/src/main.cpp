@@ -21,7 +21,7 @@ hri_safety_sense::VscProcess *VSCInterface;
  * VSC Vehicle Interface
  */
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "VscProcess");
+	ros::init(argc, argv, "hri_safety_sense");
 
 	// Create vehicle interface
 	VSCInterface = new hri_safety_sense::VscProcess();
