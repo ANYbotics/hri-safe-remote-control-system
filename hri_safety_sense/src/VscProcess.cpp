@@ -121,7 +121,7 @@ bool VscProcess::KeyValue(KeyValue::Request  &req, KeyValue::Response &res )
 	// set req.key to req.value
 	vsc_send_user_feedback(vscInterface, req.Key, req.Value);
 
-	ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
+	//ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
 
 	return true;
 }
@@ -131,7 +131,7 @@ bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
 	// set req.key to req.value (string)
 	vsc_send_user_feedback_string(vscInterface, req.Key, req.Value.c_str());
 
-	ROS_INFO("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
+	//("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
 
 	return true;
 }
