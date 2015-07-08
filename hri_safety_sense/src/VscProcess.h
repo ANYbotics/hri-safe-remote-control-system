@@ -19,6 +19,9 @@
  * ROS Includes
  */
 #include "ros/ros.h"
+#include <roscpp_nodewrap/NodeImpl.h>
+#include <roscpp_nodewrap/Nodelet.h>
+
 #include "hri_safety_sense/EmergencyStop.h"
 #include "hri_safety_sense/KeyValue.h"
 #include "hri_safety_sense/KeyString.h"
@@ -47,10 +50,15 @@ namespace hri_safety_sense {
 	const unsigned int VSC_INTERFACE_RATE = 50; /* 50 Hz */
 	const unsigned int VSC_HEARTBEAT_RATE = 20; /* 20 Hz */
 
-	class VscProcess {
+	class VscProcess:public nodewrap::NodeImpl {
 	   public:
 		  VscProcess();
 		  ~VscProcess();
+
+		  // initialize subscribers and everything here
+		  void init();
+		  // cleanup
+		  void cleanup();
 
 		  // Main loop
 		  void processOneLoop(const ros::TimerEvent&);
@@ -73,7 +81,7 @@ namespace hri_safety_sense {
 		  ErrorCounterType 		errorCounts;
 
 		  // ROS
-		  ros::NodeHandle 		rosNode;
+		  //ros::NodeHandle 		rosNode;
 		  ros::Timer 	  		mainLoopTimer;
 		  ros::ServiceServer    estopServ, keyValueServ, keyStringServ, keyRequestServ, configureMessageServ;
 		  ros::Publisher		estopPub;

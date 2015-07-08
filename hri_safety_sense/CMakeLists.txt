@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(hri_safety_sense)
 
-find_package(catkin REQUIRED COMPONENTS
-message_generation
-roscpp
-rospy
-std_msgs
+find_package(
+  catkin REQUIRED COMPONENTS
+  message_generation
+  roscpp
+  rospy
+  std_msgs  
+  nodelet
+  roscpp_nodewrap
 )
 
 ## Genereate messages in the 'msg' folder
@@ -32,7 +35,10 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
+  LIBRARIES hri_safety_sense
   CATKIN_DEPENDS
+    nodelet
+    roscpp_nodewrap
     message_generation
     roscpp
     rospy
@@ -43,14 +49,22 @@ include_directories(include
                     src
                     ${catkin_INCLUDE_DIRS})
 
+add_library(hri_safety_sense
+  src/VscProcess.cpp 
+  src/VehicleInterface.c 
+  src/JoystickHandler.cpp 
+  src/SerialInterface.c
+)
+
+add_dependencies(hri_safety_sense hri_safety_sense_gencpp)
 
 add_executable(safe_remote_control 
-src/main.cpp 
-src/VscProcess.cpp 
-src/VehicleInterface.c 
-src/JoystickHandler.cpp 
-src/SerialInterface.c)
+        src/main.cpp 
+)
 
 add_dependencies(safe_remote_control hri_safety_sense_generate_messages_cpp)
 
-target_link_libraries(safe_remote_control ${catkin_LIBRARIES})
+target_link_libraries(safe_remote_control 
+  ${catkin_LIBRARIES}
+  hri_safety_sense
+)

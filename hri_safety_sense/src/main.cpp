@@ -14,6 +14,7 @@
 
 #include "ros/ros.h"
 #include "VscProcess.h"
+#include <roscpp_nodewrap/Node.h>
 
 hri_safety_sense::VscProcess *VSCInterface;
 
@@ -24,13 +25,14 @@ int main(int argc, char **argv) {
 	ros::init(argc, argv, "hri_safety_sense");
 
 	// Create vehicle interface
-	VSCInterface = new hri_safety_sense::VscProcess();
+	nodewrap::Node<hri_safety_sense::VscProcess> node;
+	//VSCInterface = new hri_safety_sense::VscProcess();
 
 	// Allow ROS to handle timing and callbacks
 	ros::spin();
 
 	// Application ending
-	delete VSCInterface;
+	//delete VSCInterface;
 
 	return 0;
 }

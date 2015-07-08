@@ -38,19 +38,20 @@
 using namespace hri_safety_sense;
 
 VscProcess::VscProcess() :
-  rosNode("~"),
 	myEStopState(0)
 {
+}
+
+void VscProcess::init() {
 	//ros::NodeHandle nh("~");
-	std::string serialPort = "/dev/ttyACM0";
-	if(rosNode.getParam("serial", serialPort)) {
-		ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
-	}
+	std::string serialPort;
+	getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
+
+	ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
 
 	int  serialSpeed = 115200;
-	if(rosNode.getParam("serial_speed", serialSpeed)) {
-		ROS_INFO("Serial Port Speed updated to:  %i",serialSpeed);
-	}
+	getNodeHandle().param<int>("general/serialSpeed", serialSpeed, 115200);
+  ROS_INFO("Serial Port Speed updated to:  %i",serialSpeed);
 
 	/* Open VSC Interface */
 	vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
@@ -63,8 +64,9 @@ VscProcess::VscProcess() :
 	}
 
 	// Attempt to Set priority
-	bool  set_priority = false;
-	if(rosNode.getParam("set_priority", set_priority)) {
+	bool  set_priority;
+	getNodeHandle().param<bool>("general/setPriority", set_priority, false);
+	if (set_priority) {
 		ROS_INFO("Set priority updated to:  %i",set_priority);
 	}
 
@@ -73,30 +75,32 @@ VscProcess::VscProcess() :
 			ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
 		}
 	}
-
 	// Create Message Handlers
 	joystickHandler = new JoystickHandler();
 
 	// EStop callback
-	estopServ = rosNode.advertiseService("send_emergency_stop", &VscProcess::EmergencyStop, this);
+	estopServ = advertiseService("send_emergency_stop","send_emergency_stop", &VscProcess::EmergencyStop);
 
 	// KeyValue callbacks
-	keyValueServ = rosNode.advertiseService("key_value", &VscProcess::KeyValue, this);
-	keyStringServ = rosNode.advertiseService("key_string", &VscProcess::KeyString, this);
-	keyRequestServ = rosNode.advertiseService("request_key", &VscProcess::GetKeyValue, this);
-	configureMessageServ = rosNode.advertiseService("config_message", &VscProcess::ConfigureMessages, this);
+	keyValueServ = advertiseService("key_value", "key_value", &VscProcess::KeyValue);
+	keyStringServ = advertiseService("key_string", "key_string", &VscProcess::KeyString);
+	keyRequestServ = advertiseService("request_key", "request_key", &VscProcess::GetKeyValue);
+	configureMessageServ = advertiseService("config_message", "config_message", &VscProcess::ConfigureMessages);
 	// Publish Emergency Stop Status
-	estopPub = rosNode.advertise<std_msgs::UInt32>("emergency_stop", 10);
-	keyValuesPub = rosNode.advertise<hri_safety_sense::KeyValueResp>("key_value_feedback",10);
-	remoteStatusPub = rosNode.advertise<hri_safety_sense::RemoteStatus>("remote_status",10);
+	estopPub = advertise<std_msgs::UInt32>("emergency_stop","emergency_stop", 10);
+	keyValuesPub = advertise<hri_safety_sense::KeyValueResp>("key_value_feedback","key_value_feedback",10);
+	remoteStatusPub = advertise<hri_safety_sense::RemoteStatus>("remote_status","remote_status",10);
 	// Main Loop Timer Callback
-	mainLoopTimer = rosNode.createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
+	mainLoopTimer = getNodeHandle().createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
 
 	// Init last time to now
 	lastDataRx = ros::Time::now();
 
 	// Clear all error counters
 	memset(&errorCounts, 0, sizeof(errorCounts));
+}
+void VscProcess::cleanup() {
+
 }
 
 VscProcess::~VscProcess()

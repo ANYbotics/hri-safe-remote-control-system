@@ -11,5 +11,7 @@
   <depend>message_generation</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>  
+  <depend>nodelet</depend>
+  <depend>roscpp_nodewrap</depend>
   <depend>std_msgs</depend>
 </package>

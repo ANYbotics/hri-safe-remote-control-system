@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<launch>
+  <arg name="debug" default="" />
+  <node name="hri_safety_sense" pkg="hri_safety_sense" type="safe_remote_control" output="screen" launch-prefix="$(arg debug)">
+    <rosparam file="$(find hri_safety_sense)/config/hri_safety_sense.yaml" command="load"/>
+  </node>
+</launch>
