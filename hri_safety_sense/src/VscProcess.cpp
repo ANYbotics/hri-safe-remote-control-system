@@ -43,7 +43,6 @@ VscProcess::VscProcess() :
 }
 
 void VscProcess::init() {
-	//ros::NodeHandle nh("~");
 	std::string serialPort;
 	getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
 

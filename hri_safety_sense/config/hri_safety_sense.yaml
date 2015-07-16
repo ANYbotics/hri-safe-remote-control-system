@@ -1,6 +1,6 @@
 # general information
 general:
-  serialPort: /dev/ttyACM0
+  serialPort: /dev/ttyHRI
   serialSpeed: 115200
   setPriority: false
   
