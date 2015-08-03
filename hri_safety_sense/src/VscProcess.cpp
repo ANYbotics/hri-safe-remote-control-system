@@ -35,6 +35,8 @@
 #include "hri_safety_sense/VehicleInterface.h"
 #include "hri_safety_sense/VehicleMessages.h"
 
+NODEWRAP_EXPORT_CLASS(hri_safety_sense, hri_safety_sense::VscProcess);
+
 using namespace hri_safety_sense;
 
 VscProcess::VscProcess() :
