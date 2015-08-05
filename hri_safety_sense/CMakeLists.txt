@@ -65,6 +65,6 @@ add_executable(safe_remote_control
 add_dependencies(safe_remote_control hri_safety_sense_generate_messages_cpp)
 
 target_link_libraries(safe_remote_control 
-  ${catkin_LIBRARIES}
   hri_safety_sense
+  ${catkin_LIBRARIES}
 )
