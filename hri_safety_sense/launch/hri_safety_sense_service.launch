@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <launch>
-  <node name="hri_safety_sense" pkg="hri_safety_sense" type="safe_remote_control" output="screen" launch-prefix="nice -n -20" >
+  <node name="hri_safety_sense" pkg="hri_safety_sense" type="safe_remote_control" output="log" launch-prefix="" respawn="true" >
     <rosparam file="$(find hri_safety_sense)/config/hri_safety_sense.yaml" command="load"/>
   </node>
 </launch>
