@@ -26,7 +26,7 @@ using namespace hri_safety_sense;
 JoystickHandler::JoystickHandler()
 {
 	// Joystick Pub
-	rawLeftPub = rosNode.advertise<sensor_msgs::Joy>("/hri_driver_joy", 10);
+	rawLeftPub = rosNode.advertise<sensor_msgs::Joy>("/onboard_joy", 10);
 }
 
 JoystickHandler::~JoystickHandler()
