@@ -34,6 +34,7 @@
 #include "JoystickHandler.h"
 #include "hri_safety_sense/VehicleInterface.h"
 #include "hri_safety_sense/VehicleMessages.h"
+#include "hri_safety_sense/EstopStatus.h"
 
 NODEWRAP_EXPORT_CLASS(hri_safety_sense, hri_safety_sense::VscProcess);
 
@@ -88,7 +89,7 @@ void VscProcess::init() {
 	keyRequestServ = advertiseService("request_key", "request_key", &VscProcess::GetKeyValue);
 	configureMessageServ = advertiseService("config_message", "config_message", &VscProcess::ConfigureMessages);
 	// Publish Emergency Stop Status
-	estopPub = advertise<std_msgs::UInt32>("emergency_stop","emergency_stop", 10);
+	estopPub = advertise<hri_safety_sense::EstopStatus>("emergency_stop","emergency_stop", 10);
 	keyValuesPub = advertise<hri_safety_sense::KeyValueResp>("key_value_feedback","key_value_feedback",10);
 	remoteStatusPub = advertise<hri_safety_sense::RemoteStatus>("remote_status","remote_status",10);
 	// Main Loop Timer Callback
@@ -171,9 +172,9 @@ int VscProcess::handleHeartbeatMsg(VscMsgType& recvMsg)
 		HeartbeatMsgType *msgPtr = (HeartbeatMsgType*)recvMsg.msg.data;
 
 		// Publish E-STOP Values
-		std_msgs::UInt32 estopValue;
-		estopValue.data = msgPtr->EStopStatus;
-		estopPub.publish(estopValue);
+		hri_safety_sense::EstopStatus estopMsg;
+		estopMsg.EstopStatus = msgPtr->EStopStatus;
+		estopPub.publish(estopMsg);
 
 		if(msgPtr->EStopStatus > 0) {
 			ROS_WARN("Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);

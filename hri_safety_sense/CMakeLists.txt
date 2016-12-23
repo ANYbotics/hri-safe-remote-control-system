@@ -14,6 +14,7 @@ find_package(
 ## Genereate messages in the 'msg' folder
 add_message_files(
   FILES
+  EstopStatus.msg
   KeyValueResp.msg
   RemoteStatus.msg
 )
