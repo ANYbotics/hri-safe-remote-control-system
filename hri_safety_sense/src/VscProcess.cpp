@@ -36,70 +36,91 @@
 #include "hri_safety_sense/VehicleMessages.h"
 #include "hri_safety_sense/EstopStatus.h"
 
-NODEWRAP_EXPORT_CLASS(hri_safety_sense, hri_safety_sense::VscProcess);
 
 using namespace hri_safety_sense;
 
-VscProcess::VscProcess() :
-	myEStopState(0)
+VscProcess::VscProcess(any_node::Node::NodeHandlePtr nh) :
+  any_node::Node(nh),
+  myEStopState(0)
 {
 }
 
 void VscProcess::init() {
-	std::string serialPort;
-	getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
+  std::string serialPort;
+  getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
 
-	ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
+  ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
 
-	int  serialSpeed = 115200;
-	getNodeHandle().param<int>("general/serialSpeed", serialSpeed, 115200);
+  int  serialSpeed = 115200;
+  getNodeHandle().param<int>("general/serialSpeed", serialSpeed, 115200);
   ROS_INFO("Serial Port Speed updated to:  %i",serialSpeed);
 
-	/* Open VSC Interface */
-	vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
-	if (vscInterface == NULL) {
-		ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
-		ROS_WARN("Ending Program now!!");
-		exit(1);
-	} else {
-		ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
-	}
+  /* Open VSC Interface */
+  vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
+  if (vscInterface == NULL) {
+    ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
+    ROS_WARN("Ending Program now!!");
+    exit(1);
+  } else {
+    ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
+  }
 
-	// Attempt to Set priority
-	bool  set_priority;
-	getNodeHandle().param<bool>("general/setPriority", set_priority, false);
-	if (set_priority) {
-		ROS_INFO("Set priority updated to:  %i",set_priority);
-	}
+  // Attempt to Set priority
+  bool  set_priority;
+  getNodeHandle().param<bool>("general/setPriority", set_priority, false);
+  if (set_priority) {
+    ROS_INFO("Set priority updated to:  %i",set_priority);
+  }
 
-	if(set_priority) {
-		if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
-			ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
-		}
-	}
-	// Create Message Handlers
-	joystickHandler = new JoystickHandler();
+  if(set_priority) {
+    if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
+      ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
+    }
+  }
+  // Create Message Handlers
+  joystickHandler = new JoystickHandler();
 
-	// EStop callback
-	estopServ = advertiseService("send_emergency_stop","send_emergency_stop", &VscProcess::EmergencyStop);
+  // EStop callback
+  estopServ = advertiseService("send_emergency_stop",
+                               "send_emergency_stop",
+                               &VscProcess::EmergencyStop,
+                               this);
 
-	// KeyValue callbacks
-	keyValueServ = advertiseService("key_value", "key_value", &VscProcess::KeyValue);
-	keyStringServ = advertiseService("key_string", "key_string", &VscProcess::KeyString);
-	keyRequestServ = advertiseService("request_key", "request_key", &VscProcess::GetKeyValue);
-	configureMessageServ = advertiseService("config_message", "config_message", &VscProcess::ConfigureMessages);
-	// Publish Emergency Stop Status
-	estopPub = advertise<hri_safety_sense::EstopStatus>("emergency_stop","emergency_stop", 10);
-	keyValuesPub = advertise<hri_safety_sense::KeyValueResp>("key_value_feedback","key_value_feedback",10);
-	remoteStatusPub = advertise<hri_safety_sense::RemoteStatus>("remote_status","remote_status",10);
-	// Main Loop Timer Callback
-	mainLoopTimer = getNodeHandle().createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
+  // KeyValue callbacks
+  keyValueServ = advertiseService("key_value",
+                                  "key_value",
+                                  &VscProcess::KeyValue,
+                                  this);
+  keyStringServ = advertiseService("key_string",
+                                   "key_string",
+                                   &VscProcess::KeyString,
+                                   this);
+  keyRequestServ = advertiseService("request_key",
+                                    "request_key",
+                                    &VscProcess::GetKeyValue,
+                                    this);
+  configureMessageServ = advertiseService("config_message",
+                                          "config_message",
+                                          &VscProcess::ConfigureMessages,
+                                          this);
+  // Publish Emergency Stop Status
+  estopPub = advertise<hri_safety_sense::EstopStatus>("emergency_stop",
+                                                      "emergency_stop",
+                                                      10);
+  keyValuesPub = advertise<hri_safety_sense::KeyValueResp>("key_value_feedback",
+                                                           "key_value_feedback",
+                                                           10);
+  remoteStatusPub = advertise<hri_safety_sense::RemoteStatus>("remote_status",
+                                                              "remote_status",
+                                                              10);
+  // Main Loop Timer Callback
+  mainLoopTimer = getNodeHandle().createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
 
-	// Init last time to now
-	lastDataRx = ros::Time::now();
+  // Init last time to now
+  lastDataRx = ros::Time::now();
 
-	// Clear all error counters
-	memset(&errorCounts, 0, sizeof(errorCounts));
+  // Clear all error counters
+  memset(&errorCounts, 0, sizeof(errorCounts));
 }
 void VscProcess::cleanup() {
 
@@ -108,38 +129,38 @@ void VscProcess::cleanup() {
 VscProcess::~VscProcess()
 {
     // Destroy vscInterface
-	vsc_cleanup(vscInterface);
+  vsc_cleanup(vscInterface);
 
-	if(joystickHandler) delete joystickHandler;
+  if(joystickHandler) delete joystickHandler;
 }
 
 bool VscProcess::EmergencyStop(EmergencyStop::Request  &req, EmergencyStop::Response &res )
 {
-	myEStopState = (uint32_t)req.EmergencyStop;
+  myEStopState = (uint32_t)req.EmergencyStop;
 
-	ROS_WARN("VscProcess::EmergencyStop: to 0x%x", myEStopState);
+  ROS_WARN("VscProcess::EmergencyStop: to 0x%x", myEStopState);
 
-	return true;
+  return true;
 }
 
 bool VscProcess::KeyValue(KeyValue::Request  &req, KeyValue::Response &res )
 {
-	// set req.key to req.value
-	vsc_send_user_feedback(vscInterface, req.Key, req.Value);
+  // set req.key to req.value
+  vsc_send_user_feedback(vscInterface, req.Key, req.Value);
 
-	//ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
+  //ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
 
-	return true;
+  return true;
 }
 
 bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
 {
-	// set req.key to req.value (string)
-	vsc_send_user_feedback_string(vscInterface, req.Key, req.Value.c_str());
+  // set req.key to req.value (string)
+  vsc_send_user_feedback_string(vscInterface, req.Key, req.Value.c_str());
 
-	//("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
+  //("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
 
-	return true;
+  return true;
 }
 
 bool VscProcess::GetKeyValue(KeyValue::Request &req, KeyValue::Response &res)
@@ -155,38 +176,38 @@ bool VscProcess::ConfigureMessages(MessageConfigure::Request &req,MessageConfigu
 }
 void VscProcess::processOneLoop(const ros::TimerEvent&)
 {
-	// Send heartbeat message to vehicle in every state
-	vsc_send_heartbeat(vscInterface, myEStopState);
+  // Send heartbeat message to vehicle in every state
+  vsc_send_heartbeat(vscInterface, myEStopState);
 
-	// Check for new data from vehicle in every state
-	readFromVehicle();
+  // Check for new data from vehicle in every state
+  readFromVehicle();
 }
 
 int VscProcess::handleHeartbeatMsg(VscMsgType& recvMsg)
 {
-	int retVal = 0;
+  int retVal = 0;
 
-	if(recvMsg.msg.length == sizeof(HeartbeatMsgType)) {
-		ROS_DEBUG("Received Heartbeat from VSC");
+  if(recvMsg.msg.length == sizeof(HeartbeatMsgType)) {
+    ROS_DEBUG("Received Heartbeat from VSC");
 
-		HeartbeatMsgType *msgPtr = (HeartbeatMsgType*)recvMsg.msg.data;
+    HeartbeatMsgType *msgPtr = (HeartbeatMsgType*)recvMsg.msg.data;
 
-		// Publish E-STOP Values
-		hri_safety_sense::EstopStatus estopMsg;
-		estopMsg.EstopStatus = msgPtr->EStopStatus;
-		estopPub.publish(estopMsg);
+    // Publish E-STOP Values
+    hri_safety_sense::EstopStatus estopMsg;
+    estopMsg.EstopStatus = msgPtr->EStopStatus;
+    estopPub.publish(estopMsg);
 
-		if(msgPtr->EStopStatus > 0) {
-			ROS_WARN("Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);
-		}
+    if(msgPtr->EStopStatus > 0) {
+      ROS_WARN("Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);
+    }
 
-	} else {
-		ROS_WARN("RECEIVED HEARTBEAT WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
-				(unsigned int)sizeof(HeartbeatMsgType), recvMsg.msg.length);
-		retVal = 1;
-	}
+  } else {
+    ROS_WARN("RECEIVED HEARTBEAT WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+        (unsigned int)sizeof(HeartbeatMsgType), recvMsg.msg.length);
+    retVal = 1;
+  }
 
-	return retVal;
+  return retVal;
 }
 int VscProcess::handleFeedbackMsg(VscMsgType& recvMsg)
 {
@@ -236,52 +257,52 @@ int VscProcess::handleRemoteUpdate(VscMsgType& recvMsg)
 }
 void VscProcess::readFromVehicle()
 {
-	VscMsgType recvMsg;
+  VscMsgType recvMsg;
 
-	/* Read all messages */
-	while (vsc_read_next_msg(vscInterface, &recvMsg) > 0) {
-		//ROS_INFO("Got message");
-	  /* Read next Vsc Message */
-		switch (recvMsg.msg.msgType) {
-		case MSG_VSC_HEARTBEAT:
-			if(handleHeartbeatMsg(recvMsg) == 0) {
-				lastDataRx = ros::Time::now();
-			}
+  /* Read all messages */
+  while (vsc_read_next_msg(vscInterface, &recvMsg) > 0) {
+    //ROS_INFO("Got message");
+    /* Read next Vsc Message */
+    switch (recvMsg.msg.msgType) {
+    case MSG_VSC_HEARTBEAT:
+      if(handleHeartbeatMsg(recvMsg) == 0) {
+        lastDataRx = ros::Time::now();
+      }
 
-			break;
-		case MSG_VSC_JOYSTICK:
-			if(joystickHandler->handleNewMsg(recvMsg) == 0) {
-				lastDataRx = ros::Time::now();
-			}
+      break;
+    case MSG_VSC_JOYSTICK:
+      if(joystickHandler->handleNewMsg(recvMsg) == 0) {
+        lastDataRx = ros::Time::now();
+      }
 
-			break;
+      break;
 
-		case MSG_VSC_NMEA_STRING:
-//			handleGpsMsg(&recvMsg);
+    case MSG_VSC_NMEA_STRING:
+//      handleGpsMsg(&recvMsg);
 
-			break;
-		case MSG_USER_FEEDBACK:
-			// we get this message if we've requested a value
-		  handleFeedbackMsg(recvMsg);
-			break;
+      break;
+    case MSG_USER_FEEDBACK:
+      // we get this message if we've requested a value
+      handleFeedbackMsg(recvMsg);
+      break;
 
-		case MSG_REMOTE_STATUS:
-		  handleRemoteUpdate(recvMsg);
-		  break;
-		default:
-			errorCounts.invalidRxMsgCount++;
-			ROS_ERROR("Receive Error.  Invalid MsgType (0x%02X)",recvMsg.msg.msgType);
-			break;
-		}
-	}
+    case MSG_REMOTE_STATUS:
+      handleRemoteUpdate(recvMsg);
+      break;
+    default:
+      errorCounts.invalidRxMsgCount++;
+      ROS_ERROR("Receive Error.  Invalid MsgType (0x%02X)",recvMsg.msg.msgType);
+      break;
+    }
+  }
 
-	// Log warning when no data is received
-	ros::Duration noDataDuration = ros::Time::now() - lastDataRx;
-	if(noDataDuration > ros::Duration(.25)) {
-		ROS_WARN_THROTTLE(.5, "No Data Received in %i.%09i seconds", noDataDuration.sec, noDataDuration.nsec );
-	} else if (noDataDuration > ros::Duration(0.5)) {
-	  // no Data since half a second --> Soft emergency Stop
-	}
+  // Log warning when no data is received
+  ros::Duration noDataDuration = ros::Time::now() - lastDataRx;
+  if(noDataDuration > ros::Duration(.25)) {
+    ROS_WARN_THROTTLE(.5, "No Data Received in %i.%09i seconds", noDataDuration.sec, noDataDuration.nsec );
+  } else if (noDataDuration > ros::Duration(0.5)) {
+    // no Data since half a second --> Soft emergency Stop
+  }
 
 }
 

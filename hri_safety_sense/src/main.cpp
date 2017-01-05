@@ -12,29 +12,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ros/ros.h"
+#include <ros/ros.h>
+
+#include <any_node/any_node.hpp>
+
 #include "VscProcess.h"
-#include <roscpp_nodewrap/Node.h>
 
 hri_safety_sense::VscProcess *VSCInterface;
 
-/**
- * VSC Vehicle Interface
- */
 int main(int argc, char **argv) {
-	ros::init(argc, argv, "hri_safety_sense");
+  any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", 1);
+  node.execute(90);  // 90=priority of the thread calling the update(..) function (if any)
 
-	// Create vehicle interface
-	nodewrap::Node<hri_safety_sense::VscProcess> node;
-	//VSCInterface = new hri_safety_sense::VscProcess();
+  // execute blocks until the node was requested to shut down (after reception of a signal
+  // (e.g. SIGINT) or after calling the any_node::Node::shutdown() function)
+  // Allow ROS to handle timing and callbacks
 
-	// Allow ROS to handle timing and callbacks
-	ros::spin();
-
-	// Application ending
-	//delete VSCInterface;
-
-	return 0;
+  return 0;
 }
 
 
