@@ -20,7 +20,7 @@
  */
 #include "ros/ros.h"
 
-#include "VehicleMessages.h"
+#include "hri_safety_sense/VehicleMessages.h"
 #include "MsgHandler.h"
 
 namespace hri_safety_sense {

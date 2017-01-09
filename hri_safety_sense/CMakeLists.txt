@@ -1,36 +1,71 @@
 cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+project(hri_safety_sense)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
-rosbuild_init()
+find_package(
+  catkin REQUIRED COMPONENTS
+  any_node
+  message_generation
+  roscpp
+  rospy
+  std_msgs  
+)
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+## Genereate messages in the 'msg' folder
+add_message_files(
+  FILES
+  EstopStatus.msg
+  KeyValueResp.msg
+  RemoteStatus.msg
+)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-rosbuild_gensrv()
+## Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  EmergencyStop.srv
+  KeyString.srv
+  KeyValue.srv
+  MessageConfigure.srv
+)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(terex ${PROJECT_NAME})
-#rosbuild_add_executable(talker src/talker.cpp)
-#rosbuild_add_executable(listener src/listener.cpp)
-#target_link_libraries(terex hri_common)
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+)
 
-rosbuild_add_executable(safe_remote_control src/main.cpp src/VscProcess.cpp src/VehicleInterface.c src/JoystickHandler.cpp src/SerialInterface.c)
- 
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES hri_safety_sense
+  CATKIN_DEPENDS
+    any_node
+    message_generation
+    roscpp
+    rospy
+    std_msgs
+)
+
+include_directories(include
+                    src
+                    ${catkin_INCLUDE_DIRS})
+
+add_library(hri_safety_sense
+  src/VscProcess.cpp 
+  src/VehicleInterface.c 
+  src/JoystickHandler.cpp 
+  src/SerialInterface.c
+)
+
+add_dependencies(hri_safety_sense hri_safety_sense_gencpp)
+
+add_executable(safe_remote_control 
+        src/main.cpp 
+)
+
+add_dependencies(safe_remote_control hri_safety_sense_generate_messages_cpp)
+
+target_link_libraries(safe_remote_control 
+  hri_safety_sense
+  ${catkin_LIBRARIES}
+)

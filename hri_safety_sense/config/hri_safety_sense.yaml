@@ -1,0 +1,34 @@
+# general information
+general:
+  serialPort: /dev/ttyHRI
+  serialSpeed: 115200
+  setPriority: false
+  
+publishers:
+  emergency_stop:
+    topic: emergency_stop
+    queue_size: 10
+    latch: false
+  key_value_feedback:
+    topic: key_value_feedback
+    queue_size: 10
+    latch: false
+  remote_status:
+    topic: remote_statusse
+    queue_size: 10
+    latch: false
+    
+servers:
+  key_value:
+    service: key_value
+    persistent: false
+  key_string:
+    service: key_string
+    persistent: false
+  request_key:
+    service: request_key
+    persistent: false
+  config_message:
+    service: config_message
+    persistent: false    
+    

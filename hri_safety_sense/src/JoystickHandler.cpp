@@ -18,7 +18,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 
-#include "VehicleMessages.h"
+#include "hri_safety_sense/VehicleMessages.h"
 #include "JoystickHandler.h"
 
 using namespace hri_safety_sense;
@@ -26,7 +26,7 @@ using namespace hri_safety_sense;
 JoystickHandler::JoystickHandler()
 {
 	// Joystick Pub
-	rawLeftPub = rosNode.advertise<sensor_msgs::Joy>("/joy", 10);
+	rawLeftPub = rosNode.advertise<sensor_msgs::Joy>("/joy/onboard", 10);
 }
 
 JoystickHandler::~JoystickHandler()

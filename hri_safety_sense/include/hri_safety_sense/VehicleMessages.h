@@ -60,12 +60,15 @@ enum VSC_STATES_TYPE {
  * 	The enumerated values of VSC messages.
  */
 enum VSC_MESSAGE_TYPE {
-	MSG_VSC_JOYSTICK = 0x10,
-	MSG_VSC_NMEA_STRING = 0x12,
-	MSG_VSC_HEARTBEAT = 0x20,
-	MSG_USER_HEARTBEAT = 0x21,
-	MSG_USER_FEEDBACK = 0x30,
-	MSG_USER_FEEDBACK_STRING = 0x31
+	MSG_VSC_JOYSTICK = 0x10,        // these are the joystick values
+	MSG_VSC_NMEA_STRING = 0x12,     // gps values
+	MSG_VSC_HEARTBEAT = 0x20,       // Heartbeat message from vehicle
+	MSG_USER_HEARTBEAT = 0x21,      // Heartbeat sent from computer
+	MSG_REMOTE_STATUS = 0x22,       // Status Message
+	MSG_CONTROL_MESSAGE = 0x23,     // Control what messages are sent by the VSC/Remote
+	MSG_USER_FEEDBACK = 0x30,       // Set or receive a Value by key (defined in VSC_USER_FEEDBACK_KEY_TYPE)
+	MSG_USER_FEEDBACK_STRING = 0x31,// Set a string by key (defined in VSC_USER_FEEDBA
+	MSG_USER_FEEDBACK_GET = 0x32    // request a Value by key (defined in VSC_USER_FEEDBACK_KEY_TYPE)
 };
 
 /** VSC_USER_FEEDBACK_KEY_TYPE
@@ -84,6 +87,12 @@ enum VSC_USER_FEEDBACK_KEY_TYPE {
 	VSC_USER_LEFT_MOTOR_INTENSITY = 10,
 	VSC_USER_RIGHT_MOTOR_INTENSITY = 11,
 	VSC_USER_BOTH_MOTOR_INTENSITY = 12,
+	VSC_USER_INACTIVITY_PAUSE = 80,
+	VSC_USER_AUTO_OFF_ENABLE,
+	VSC_USER_ORIENTATION_PAUSE_ENABLE,
+	VSC_USER_FREEFALL_PAUSE_ENABLE,
+	VSC_USER_INACTIVITY_PAUSE_ENABLE,
+	VSC_USER_TIMEOUT_ENABLE = 85, // if this is enabled, we need to send the Heartbeat message from user,otherwise we'll get an emergency stop
 	VSC_USER_DISPLAY_ROW_1 = 90,
 	VSC_USER_DISPLAY_ROW_2 = 91,
 	VSC_USER_DISPLAY_ROW_3 = 92,
@@ -223,6 +232,35 @@ typedef struct {
 	uint8_t key;
 	char value[VSC_USER_FEEDBACK_STRING_LENGTH];
 } UserFeedbackStringMsgType;
+
+/** UserFeedbackGetMsgType
+ * The Structure for the packed key pair that is used to request the key value
+ * from VSC/SRC
+ */
+typedef struct {
+  uint8_t key;
+} UserFeedbackGetMsgType;
+
+/** UserConfigureMessagesType
+ * The Structure to configure a message type
+ */
+typedef struct {
+  uint8_t msg_type;
+  uint8_t enable;
+  uint16_t interval;
+} UserConfigureMessagesType;
+
+/** RemoteStatusType
+ * The Structure to receive the SRC and VSC status
+ */
+typedef struct {
+  uint8_t battery_level;
+  uint8_t battery_charging;
+  uint8_t conn_strength_VSC;
+  uint8_t conn_strength_SRC;
+  uint8_t RSSI_VSC;
+  uint8_t RSSI_SRC;
+} RemoteStatusType;
 
 /** MOTOR_INTENSITY_TYPE
  * 	The enumerated values of the motor control intensities 

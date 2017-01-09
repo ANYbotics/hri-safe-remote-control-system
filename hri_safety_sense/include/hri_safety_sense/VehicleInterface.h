@@ -143,6 +143,29 @@ void vsc_send_user_feedback_string(VscInterfaceType* vscInterface, uint8_t key, 
  */
 void vsc_send_heartbeat(VscInterfaceType* vscInterface, uint8_t EStopStatus);
 
+/**
+ * Send user feedback get message to VSC
+ *
+ * This packages and sends the feedback get message to the VSC,
+ * the VSC will respond with a user feedback MSG containg the requested value
+ *
+ * @param vscInterface VSC Interface Structure.
+ * @param key Index for the requested user feedback value.
+ */
+void vsc_send_request_user_feedback(VscInterfaceType* vscInterface, uint8_t key);
+
+/**
+ * Send message configuration message to VSC
+ *
+ * This packages and sends the message configuration message to the vsc
+ *
+ * @param vscInterface VSC Interface Structure.
+ * @param msg_type defines what message type is being enabled/disabled
+ * @param enable that msg of msg_type is sent if > 0
+ * @param interval time between transmissions in milliseconds range[20..uint16_MAX]
+ */
+void vsc_send_configure_msgs(VscInterfaceType* vscInterface, uint8_t msg_type, uint8_t enable,uint16_t interval);
+
 #ifdef __cplusplus
 }
 #endif

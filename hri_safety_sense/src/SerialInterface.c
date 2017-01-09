@@ -24,7 +24,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#include "SerialInterface.h"
+#include "hri_safety_sense/SerialInterface.h"
 
 /**
  * Open a serial port
