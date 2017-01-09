@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(hri_safety_sense)
 
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
 find_package(
   catkin REQUIRED COMPONENTS
+  any_node
   message_generation
   roscpp
   rospy
   std_msgs  
-  nodelet
-  roscpp_nodewrap
 )
 
 ## Genereate messages in the 'msg' folder
@@ -38,8 +39,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES hri_safety_sense
   CATKIN_DEPENDS
-    nodelet
-    roscpp_nodewrap
+    any_node
     message_generation
     roscpp
     rospy
