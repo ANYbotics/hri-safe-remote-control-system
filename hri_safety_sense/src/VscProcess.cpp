@@ -40,8 +40,7 @@
 using namespace hri_safety_sense;
 
 VscProcess::VscProcess(any_node::Node::NodeHandlePtr nh) :
-  any_node::Node(nh),
-  myEStopState(0)
+  any_node::Node(nh)
 {
 }
 
@@ -122,8 +121,18 @@ void VscProcess::init() {
   // Clear all error counters
   memset(&errorCounts, 0, sizeof(errorCounts));
 }
-void VscProcess::cleanup() {
 
+void VscProcess::cleanup() {
+  mainLoopTimer.stop();
+
+  estopServ.shutdown();
+  keyValueServ.shutdown();
+  keyStringServ.shutdown();
+  keyRequestServ.shutdown();
+  configureMessageServ.shutdown();
+  estopPub.shutdown();
+  keyValuesPub.shutdown();
+  remoteStatusPub.shutdown();
 }
 
 VscProcess::~VscProcess()
