@@ -78,22 +78,22 @@ class VscProcess:public any_node::Node {
   int handleRemoteUpdate(VscMsgType& recvMsg);
 
   // Local State
-  uint32_t         myEStopState;
-  ErrorCounterType     errorCounts;
+  uint32_t myEStopState = 0;
+  ErrorCounterType errorCounts;
 
   // ROS
-  ros::Timer         mainLoopTimer;
-  ros::ServiceServer    estopServ, keyValueServ, keyStringServ, keyRequestServ, configureMessageServ;
-  ros::Publisher    estopPub;
-  ros::Publisher    keyValuesPub;
-  ros::Publisher    remoteStatusPub;
-  ros::Time       lastDataRx, lastTxTime;
+  ros::Timer mainLoopTimer;
+  ros::ServiceServer estopServ, keyValueServ, keyStringServ, keyRequestServ, configureMessageServ;
+  ros::Publisher estopPub;
+  ros::Publisher keyValuesPub;
+  ros::Publisher remoteStatusPub;
+  ros::Time lastDataRx, lastTxTime;
 
   // Message Handlers
-  MsgHandler      *joystickHandler;
+  MsgHandler* joystickHandler = nullptr;
 
   /* File descriptor for VSC Interface */
-  VscInterfaceType    *vscInterface;
+  VscInterfaceType* vscInterface = nullptr;
 
 };
 
