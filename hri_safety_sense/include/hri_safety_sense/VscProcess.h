@@ -55,7 +55,9 @@ class VscProcess:public any_node::Node {
   VscProcess() = delete; // constructor needs to take a shared_ptr to a ros::Nodehandle instance.
   VscProcess(any_node::Node::NodeHandlePtr nh);
   virtual ~VscProcess();
-  virtual bool update(const any_worker::WorkerEvent& event) {return true;};
+  virtual bool update(const any_worker::WorkerEvent& event);
+
+
   // initialize subscribers and everything here
   virtual void init();
   // cleanup
@@ -82,7 +84,7 @@ class VscProcess:public any_node::Node {
   ErrorCounterType errorCounts;
 
   // ROS
-  ros::Timer mainLoopTimer;
+//  ros::Timer mainLoopTimer;
   ros::ServiceServer estopServ, keyValueServ, keyStringServ, keyRequestServ, configureMessageServ;
   ros::Publisher estopPub;
   ros::Publisher keyValuesPub;

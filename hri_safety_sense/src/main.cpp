@@ -15,19 +15,11 @@
 #include <ros/ros.h>
 
 #include <any_node/any_node.hpp>
-
-#include "VscProcess.h"
-
-hri_safety_sense::VscProcess *VSCInterface;
+#include <hri_safety_sense/VscProcess.h>
 
 int main(int argc, char **argv) {
-  any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", 1);
-  node.execute(90);  // 90=priority of the thread calling the update(..) function (if any)
-
-  // execute blocks until the node was requested to shut down (after reception of a signal
-  // (e.g. SIGINT) or after calling the any_node::Node::shutdown() function)
-  // Allow ROS to handle timing and callbacks
-
+  any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", true, 1.0/(double)hri_safety_sense::VSC_INTERFACE_RATE);
+  node.execute(90);
   return 0;
 }
 

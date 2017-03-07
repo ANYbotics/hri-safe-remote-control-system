@@ -30,7 +30,7 @@
 /**
  * Includes
  */
-#include "VscProcess.h"
+#include "hri_safety_sense/VscProcess.h"
 #include "JoystickHandler.h"
 #include "hri_safety_sense/VehicleInterface.h"
 #include "hri_safety_sense/VehicleMessages.h"
@@ -113,7 +113,7 @@ void VscProcess::init() {
                                                               "remote_status",
                                                               10);
   // Main Loop Timer Callback
-  mainLoopTimer = getNodeHandle().createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
+//  mainLoopTimer = getNodeHandle().createTimer(ros::Duration(1.0/VSC_INTERFACE_RATE), &VscProcess::processOneLoop, this);
 
   // Init last time to now
   lastDataRx = ros::Time::now();
@@ -123,7 +123,8 @@ void VscProcess::init() {
 }
 
 void VscProcess::cleanup() {
-  mainLoopTimer.stop();
+
+//  mainLoopTimer.stop();
 
   estopServ.shutdown();
   keyValueServ.shutdown();
@@ -133,14 +134,18 @@ void VscProcess::cleanup() {
   estopPub.shutdown();
   keyValuesPub.shutdown();
   remoteStatusPub.shutdown();
+
+
+  // Destroy vscInterface
+ vsc_cleanup(vscInterface);
+
+ if(joystickHandler) delete joystickHandler;
+
 }
 
 VscProcess::~VscProcess()
 {
-    // Destroy vscInterface
-  vsc_cleanup(vscInterface);
 
-  if(joystickHandler) delete joystickHandler;
 }
 
 bool VscProcess::EmergencyStop(EmergencyStop::Request  &req, EmergencyStop::Response &res )
@@ -183,6 +188,16 @@ bool VscProcess::ConfigureMessages(MessageConfigure::Request &req,MessageConfigu
   vsc_send_configure_msgs(vscInterface,req.MsgType,req.Enable,req.Interval);
   return true;
 }
+
+bool VscProcess::update(const any_worker::WorkerEvent& event) {
+  // Send heartbeat message to vehicle in every state
+  vsc_send_heartbeat(vscInterface, myEStopState);
+
+  // Check for new data from vehicle in every state
+  readFromVehicle();
+  return true;
+};
+
 void VscProcess::processOneLoop(const ros::TimerEvent&)
 {
   // Send heartbeat message to vehicle in every state
