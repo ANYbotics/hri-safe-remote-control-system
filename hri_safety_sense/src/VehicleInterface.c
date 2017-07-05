@@ -222,9 +222,9 @@ int vsc_read_next_msg(VscInterfaceType* vscInterface, VscMsgType *newMsg) {
 			}
 		} else {
 			/* Search for start of message. */
-			fprintf(stderr,
-					"VscInterface: Invalid bytes 0x%02x 0x%02x received when expecting message headers\n",
-					msgPtr->msg.header_1, msgPtr->msg.header_2);
+			// fprintf(stderr,
+			// 		"VscInterface: Invalid bytes 0x%02x 0x%02x received when expecting message headers\n",
+			// 		msgPtr->msg.header_1, msgPtr->msg.header_2);
 			vscInterface->back++;
 		}
 	}
@@ -435,4 +435,3 @@ void vsc_send_heartbeat(VscInterfaceType* vscInterface, uint8_t EStopStatus) {
 int vsc_get_fd(VscInterfaceType* vscInterface) {
 	return vscInterface->fd;
 }
-
