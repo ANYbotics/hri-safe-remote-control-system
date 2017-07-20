@@ -3,13 +3,13 @@ project(hri_safety_sense)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
-find_package(
-  catkin REQUIRED COMPONENTS
+find_package(catkin REQUIRED COMPONENTS
   any_node
   message_generation
   roscpp
   rospy
-  std_msgs  
+  sensor_msgs
+  std_msgs
 )
 
 ## Genereate messages in the 'msg' folder
@@ -43,12 +43,15 @@ catkin_package(
     message_generation
     roscpp
     rospy
+    sensor_msgs
     std_msgs
 )
 
-include_directories(include
-                    src
-                    ${catkin_INCLUDE_DIRS})
+include_directories(
+  include
+  src
+  ${catkin_INCLUDE_DIRS}
+)
 
 add_library(hri_safety_sense
   src/VscProcess.cpp 
@@ -57,15 +60,34 @@ add_library(hri_safety_sense
   src/SerialInterface.c
 )
 
-add_dependencies(hri_safety_sense hri_safety_sense_gencpp)
-
-add_executable(safe_remote_control 
-        src/main.cpp 
+add_dependencies(hri_safety_sense
+  hri_safety_sense_gencpp
 )
 
-add_dependencies(safe_remote_control hri_safety_sense_generate_messages_cpp)
+add_executable(safe_remote_control 
+  src/main.cpp
+)
+
+add_dependencies(safe_remote_control
+  hri_safety_sense_generate_messages_cpp
+)
 
 target_link_libraries(safe_remote_control 
   hri_safety_sense
   ${catkin_LIBRARIES}
+)
+
+install(TARGETS hri_safety_sense safe_remote_control
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
+
+install(DIRECTORY config launch scripts udev
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
