@@ -2,7 +2,7 @@
 general:
   serialPort: /dev/ttyHRI
   serialSpeed: 115200
-  setPriority: false
+  setPriority: true
   
 publishers:
   emergency_stop:
