@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>hri_safety_sense</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The hri_safety_sense package</description>
   <maintainer email="gehrinch@ethz.ch">Christian Gehring</maintainer>
   <license>BSD</license>
