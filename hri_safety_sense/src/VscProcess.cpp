@@ -121,7 +121,7 @@ bool VscProcess::init() {
   // Clear all error counters
   memset(&errorCounts, 0, sizeof(errorCounts));
 
-  addWorker(ros::this_node::getName() + "::updateWorker", param<double>("time_step", 1.0), &VscProcess::update, this, 90);
+  addWorker(ros::this_node::getName() + "::updateWorker", 1.0/(double)VSC_INTERFACE_RATE, &VscProcess::update, this, 90);
   return true;
 }
 
@@ -332,4 +332,3 @@ void VscProcess::readFromVehicle()
   }
 
 }
-
