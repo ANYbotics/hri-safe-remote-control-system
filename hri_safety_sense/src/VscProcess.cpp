@@ -44,7 +44,7 @@ VscProcess::VscProcess(any_node::Node::NodeHandlePtr nh) :
 {
 }
 
-void VscProcess::init() {
+bool VscProcess::init() {
   std::string serialPort;
   getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
 
@@ -120,6 +120,9 @@ void VscProcess::init() {
 
   // Clear all error counters
   memset(&errorCounts, 0, sizeof(errorCounts));
+
+  addWorker(ros::this_node::getName() + "::updateWorker", param<double>("time_step", 1.0), &VscProcess::update, this, 90);
+  return true;
 }
 
 void VscProcess::cleanup() {

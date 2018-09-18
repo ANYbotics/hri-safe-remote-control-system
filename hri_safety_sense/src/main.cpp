@@ -18,8 +18,8 @@
 #include <hri_safety_sense/VscProcess.h>
 
 int main(int argc, char **argv) {
-  any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", true, 1.0/(double)hri_safety_sense::VSC_INTERFACE_RATE);
-  node.execute(90);
+  any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", 1);
+  node.execute();
   return 0;
 }
 

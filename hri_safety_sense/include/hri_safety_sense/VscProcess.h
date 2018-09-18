@@ -57,11 +57,10 @@ class VscProcess:public any_node::Node {
   virtual ~VscProcess();
   virtual bool update(const any_worker::WorkerEvent& event);
 
-
   // initialize subscribers and everything here
-  virtual void init();
+  bool init() override;
   // cleanup
-  virtual void cleanup();
+  void cleanup() override;
 
   // Main loop
   void processOneLoop(const ros::TimerEvent&);
