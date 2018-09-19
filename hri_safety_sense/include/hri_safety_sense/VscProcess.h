@@ -54,14 +54,13 @@ class VscProcess:public any_node::Node {
  public:
   VscProcess() = delete; // constructor needs to take a shared_ptr to a ros::Nodehandle instance.
   VscProcess(any_node::Node::NodeHandlePtr nh);
-  virtual ~VscProcess();
+  ~VscProcess() override = default;
   virtual bool update(const any_worker::WorkerEvent& event);
 
-
   // initialize subscribers and everything here
-  virtual void init();
+  bool init() override;
   // cleanup
-  virtual void cleanup();
+  void cleanup() override;
 
   // Main loop
   void processOneLoop(const ros::TimerEvent&);

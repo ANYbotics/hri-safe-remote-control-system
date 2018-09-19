@@ -44,7 +44,7 @@ VscProcess::VscProcess(any_node::Node::NodeHandlePtr nh) :
 {
 }
 
-void VscProcess::init() {
+bool VscProcess::init() {
   std::string serialPort;
   getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
 
@@ -58,11 +58,9 @@ void VscProcess::init() {
   vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
   if (vscInterface == NULL) {
     ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
-    ROS_WARN("Ending Program now!!");
-    exit(1);
-  } else {
-    ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
-  }
+    return false;
+  } 
+  ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
 
   // Attempt to Set priority
   bool  set_priority;
@@ -74,6 +72,7 @@ void VscProcess::init() {
   if(set_priority) {
     if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
       ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
+      return false;
     }
   }
   // Create Message Handlers
@@ -120,6 +119,8 @@ void VscProcess::init() {
 
   // Clear all error counters
   memset(&errorCounts, 0, sizeof(errorCounts));
+
+  return addWorker(ros::this_node::getName() + "::updateWorker", 1.0/(double)VSC_INTERFACE_RATE, &VscProcess::update, this, 90);
 }
 
 void VscProcess::cleanup() {
@@ -140,11 +141,6 @@ void VscProcess::cleanup() {
  vsc_cleanup(vscInterface);
 
  if(joystickHandler) delete joystickHandler;
-
-}
-
-VscProcess::~VscProcess()
-{
 
 }
 
@@ -329,4 +325,3 @@ void VscProcess::readFromVehicle()
   }
 
 }
-
