@@ -57,9 +57,9 @@ bool VscProcess::init() {
   /* Open VSC Interface */
   vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
   if (vscInterface == NULL) {
-    ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
+    ROS_INFO("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
     return false;
-  } 
+  }
   ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
 
   // Attempt to Set priority
@@ -71,10 +71,10 @@ bool VscProcess::init() {
 
   if(set_priority) {
     if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
-      ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
-      return false;
+      ROS_INFO("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
     }
   }
+
   // Create Message Handlers
   joystickHandler = new JoystickHandler();
 
@@ -120,7 +120,12 @@ bool VscProcess::init() {
   // Clear all error counters
   memset(&errorCounts, 0, sizeof(errorCounts));
 
-  return addWorker(ros::this_node::getName() + "::updateWorker", 1.0/(double)VSC_INTERFACE_RATE, &VscProcess::update, this, 90);
+  bool success = addWorker(ros::this_node::getName() + "::updateWorker", 1.0/(double)VSC_INTERFACE_RATE, &VscProcess::update, this, 90);
+  if (!success) {
+    ROS_FATAL_STREAM("[hri] could not add worker! Update rate:" << 1.0/(double)VSC_INTERFACE_RATE);
+  }
+
+  return success;
 }
 
 void VscProcess::cleanup() {
