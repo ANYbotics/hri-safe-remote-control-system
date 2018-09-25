@@ -57,7 +57,7 @@ bool VscProcess::init() {
   /* Open VSC Interface */
   vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
   if (vscInterface == NULL) {
-    ROS_INFO("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
+    ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
     return false;
   }
   ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
@@ -71,7 +71,7 @@ bool VscProcess::init() {
 
   if(set_priority) {
     if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
-      ROS_INFO("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
+      ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
     }
   }
 
