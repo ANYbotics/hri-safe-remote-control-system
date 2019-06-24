@@ -3,15 +3,15 @@
   <name>hri_safety_sense</name>
   <version>0.3.0</version>
   <description>The hri_safety_sense package</description>
-  <maintainer email="gehrinch@ethz.ch">Christian Gehring</maintainer>
+  <maintainer email="cgehring@anybotics.com">Christian Gehring</maintainer>
   <license>BSD</license>
-  <author email="gehrinch@ethz.ch">Christian Gehring</author>
+  <author email="cgehring@anybotics.com">Christian Gehring</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>any_node</depend>
   <depend>message_generation</depend>
   <depend>roscpp</depend>
-  <depend>rospy</depend>  
+  <depend>rospy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
 </package>
