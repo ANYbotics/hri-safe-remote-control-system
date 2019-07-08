@@ -7,4 +7,3 @@
 #### Tutorial Instructions: [Running_Tutorials] (Running_Tutorials.md)
 #### C Drivers: [/drivers] (/drivers)
 #### ROS Drivers: [/hri_safety_sense] (/hri_safety_sense)
-
