@@ -19,8 +19,7 @@
 
 int main(int argc, char **argv) {
   any_node::Nodewrap<hri_safety_sense::VscProcess> node(argc, argv, "hri_safety_sense", 1);
-  node.execute();
-  return 0;
+  return static_cast<int>(!node.execute());
 }
 
 
