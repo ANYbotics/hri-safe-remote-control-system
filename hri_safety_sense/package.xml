@@ -3,7 +3,8 @@
   <name>hri_safety_sense</name>
   <version>0.3.0</version>
   <description>The hri_safety_sense package</description>
-  <maintainer email="cgehring@anybotics.com">Christian Gehring</maintainer>
+  <maintainer email="msuetterlin@anybotics.com">Marco Sütterlin</maintainer>
+  <maintainer email="lisler@anybotics.com">Linus Isler</maintainer>
   <license>BSD</license>
   <author email="cgehring@anybotics.com">Christian Gehring</author>
 
