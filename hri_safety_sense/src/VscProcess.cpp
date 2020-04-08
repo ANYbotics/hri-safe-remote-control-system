@@ -48,30 +48,30 @@ bool VscProcess::init() {
   std::string serialPort;
   getNodeHandle().param<std::string>("general/serialPort", serialPort, "/dev/ttyACM0");
 
-  ROS_INFO("Serial Port updated to:  %s",serialPort.c_str());
+  ROS_DEBUG("Serial Port updated to:  %s",serialPort.c_str());
 
   int  serialSpeed = 115200;
   getNodeHandle().param<int>("general/serialSpeed", serialSpeed, 115200);
-  ROS_INFO("Serial Port Speed updated to:  %i",serialSpeed);
+  ROS_DEBUG("Serial Port Speed updated to:  %i",serialSpeed);
 
   /* Open VSC Interface */
   vscInterface = vsc_initialize(serialPort.c_str(),serialSpeed);
   if (vscInterface == NULL) {
-    ROS_FATAL("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
+    ROS_ERROR("Cannot open serial port! (%s, %i)",serialPort.c_str(),serialSpeed);
     return false;
   }
-  ROS_INFO("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
+  ROS_DEBUG("Connected to VSC on %s : %i",serialPort.c_str(),serialSpeed);
 
   // Attempt to Set priority
   bool  set_priority;
   getNodeHandle().param<bool>("general/setPriority", set_priority, false);
   if (set_priority) {
-    ROS_INFO("Set priority updated to:  %i",set_priority);
+    ROS_DEBUG("Set priority updated to:  %i",set_priority);
   }
 
   if(set_priority) {
     if(setpriority(PRIO_PROCESS, 0, -19) == -1) {
-      ROS_ERROR("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
+      ROS_DEBUG("UNABLE TO SET PRIORITY OF PROCESS! (%i, %s)",errno,strerror(errno));
     }
   }
 
@@ -122,7 +122,7 @@ bool VscProcess::init() {
 
   bool success = addWorker(ros::this_node::getName() + "::updateWorker", 1.0/(double)VSC_INTERFACE_RATE, &VscProcess::update, this, 90);
   if (!success) {
-    ROS_FATAL_STREAM("[hri] could not add worker! Update rate:" << 1.0/(double)VSC_INTERFACE_RATE);
+    ROS_WARN_STREAM("[hri] could not add worker! Update rate:" << 1.0/(double)VSC_INTERFACE_RATE);
   }
 
   return success;
@@ -153,7 +153,7 @@ bool VscProcess::EmergencyStop(EmergencyStop::Request  &req, EmergencyStop::Resp
 {
   myEStopState = (uint32_t)req.EmergencyStop;
 
-  ROS_WARN("VscProcess::EmergencyStop: to 0x%x", myEStopState);
+  ROS_DEBUG("VscProcess::EmergencyStop: to 0x%x", myEStopState);
 
   return true;
 }
@@ -163,7 +163,7 @@ bool VscProcess::KeyValue(KeyValue::Request  &req, KeyValue::Response &res )
   // set req.key to req.value
   vsc_send_user_feedback(vscInterface, req.Key, req.Value);
 
-  //ROS_INFO("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
+  ROS_DEBUG("VscProcess::KeyValue: 0x%x, 0x%x", req.Key, req.Value);
 
   return true;
 }
@@ -173,7 +173,7 @@ bool VscProcess::KeyString(KeyString::Request  &req, KeyString::Response &res )
   // set req.key to req.value (string)
   vsc_send_user_feedback_string(vscInterface, req.Key, req.Value.c_str());
 
-  //("VscProcess::KeyValue: 0x%x, %s", req.Key, req.Value.c_str());
+  ROS_DEBUG("VscProcess::KeyString: 0x%x, %s", req.Key, req.Value.c_str());
 
   return true;
 }
@@ -222,12 +222,8 @@ int VscProcess::handleHeartbeatMsg(VscMsgType& recvMsg)
     estopMsg.EstopStatus = msgPtr->EStopStatus;
     estopPub.publish(estopMsg);
 
-    if(msgPtr->EStopStatus > 0) {
-      ROS_WARN("Received ESTOP from the vehicle!!! 0x%x",msgPtr->EStopStatus);
-    }
-
   } else {
-    ROS_WARN("RECEIVED HEARTBEAT WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+    ROS_DEBUG("RECEIVED HEARTBEAT WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
         (unsigned int)sizeof(HeartbeatMsgType), recvMsg.msg.length);
     retVal = 1;
   }
@@ -249,7 +245,7 @@ int VscProcess::handleFeedbackMsg(VscMsgType& recvMsg)
     keyValuesPub.publish(msg);
 
   } else {
-    ROS_WARN("RECEIVED FEEDBACKSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+    ROS_DEBUG("RECEIVED FEEDBACKMSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
         (unsigned int)sizeof(UserFeedbackMsgType), recvMsg.msg.length);
     retVal = 1;
   }
@@ -273,7 +269,7 @@ int VscProcess::handleRemoteUpdate(VscMsgType& recvMsg)
     remoteStatusPub.publish(msg);
 
   } else {
-    ROS_WARN("RECEIVED FEEDBACKSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+    ROS_DEBUG("RECEIVED FEEDBACKMSG WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
         (unsigned int)sizeof(RemoteStatusType), recvMsg.msg.length);
     retVal = 1;
   }
@@ -316,7 +312,7 @@ void VscProcess::readFromVehicle()
       break;
     default:
       errorCounts.invalidRxMsgCount++;
-      ROS_ERROR("Receive Error.  Invalid MsgType (0x%02X)",recvMsg.msg.msgType);
+      ROS_DEBUG("Receive Error.  Invalid MsgType (0x%02X)",recvMsg.msg.msgType);
       break;
     }
   }
@@ -324,7 +320,7 @@ void VscProcess::readFromVehicle()
   // Log warning when no data is received
   ros::Duration noDataDuration = ros::Time::now() - lastDataRx;
   if(noDataDuration > ros::Duration(.25)) {
-    ROS_WARN_THROTTLE(.5, "No Data Received in %i.%09i seconds", noDataDuration.sec, noDataDuration.nsec );
+    ROS_DEBUG_THROTTLE(.5, "No Data Received in %i.%09i seconds", noDataDuration.sec, noDataDuration.nsec );
   } else if (noDataDuration > ros::Duration(0.5)) {
     // no Data since half a second --> Soft emergency Stop
   }

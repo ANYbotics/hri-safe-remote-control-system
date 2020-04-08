@@ -96,7 +96,7 @@ uint32_t JoystickHandler::handleNewMsg(const VscMsgType &incomingMsg)
 	} else {
 		retval = -1;
 
-		ROS_WARN("RECEIVED PTZ COMMANDS WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
+		ROS_DEBUG("RECEIVED PTZ COMMANDS WITH INVALID MESSAGE SIZE! Expected: 0x%x, Actual: 0x%x",
 				(unsigned int)sizeof(JoystickMsgType), incomingMsg.msg.length);
 	}
 
