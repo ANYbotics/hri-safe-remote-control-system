@@ -104,6 +104,7 @@ if(CATKIN_ENABLE_TESTING)
 
   if(TARGET test_${PROJECT_NAME})
     target_link_libraries( test_${PROJECT_NAME}
+      hri_safety_sense
       ${catkin_LIBRARIES}
       gtest_main
     )
